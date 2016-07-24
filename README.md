@@ -17,7 +17,7 @@ Written by <a href=http://haraldrudell.com >Harald Rudell</a>
 <h2>Features</h2>
 - **Settings** configured in [YAML 1.2](http://www.yaml.org/spec/1.2/spec.html)
 - **Options Parsing** for flexible command-line invocation
-- **Proper Encapsulation** using classes and sound software enginneering practices
+- **Proper Encapsulation** using classes and sound software engineering practices
 
 <h2>Development Process</h2>
 

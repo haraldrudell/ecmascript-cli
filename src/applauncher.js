@@ -11,7 +11,7 @@ LICENSE file in the root directory of this source tree.
 import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
-
+import os from 'os'
 export class AppLauncher {
   /*
   o.constructor: optional function
@@ -24,36 +24,34 @@ export class AppLauncher {
     const appName = o.appName  && String(o.appName) ||
       o.constructor && String(o.constructor).toLowerCase() ||
       'nameless'
-    console.log(`\n\n\n=== ${this.getLocalIsoString()} ${appName} starting`)
+    console.log(`\n\n\n=== ${this.getLocalIsoString()} ${appName}:${process.pid} starting on ${os.hostname()}`)
+
     if (o.constructor) {
       const i = new o.constructor(Object.assign({appName: appName}, o.options))
-      if (o.method) {
-        const m = i[o.method]
-        if (typeof m === 'function') process.nextTick(m.bind(i))
-      }
+      if (o.method && typeof i[o.method] === 'function')
+        process.nextTick(() => i[o.method]())
     }
   }
 
   getLocalIsoString() {
-    var nowMsZ = Date.now() // ms
-    var tzMinutesAddToLocalToZ = new Date().getTimezoneOffset() // min
-
-    // get 2016-06-23T15:04:52
-    var printsLocalTime =  nowMsZ - tzMinutesAddToLocalToZ * 6e4
-    var result = new Date(printsLocalTime).toISOString()
-    result = result.slice(0, -5) // drop period 3xms and Z
+    // get current time 2016-06-23T15:04:52 in local time zone
+    const nowMsZ = Date.now() // ms Unix epoch, UTC time zone
+    const tzMinutesAddToLocalToZ = new Date().getTimezoneOffset() // min
+    const msPerMinute = 60000
+    const printsLocalTime =  nowMsZ - tzMinutesAddToLocalToZ * msPerMinute
+    const localTime = new Date(printsLocalTime).toISOString().slice(0, -5) // drop period 3xms and Z
 
     // get -07 timezone offset
-    var tzOffsetString = tzMinutesAddToLocalToZ > 0 ? '-' : '+'
-    var tzPositiveMinutes = Math.abs(tzMinutesAddToLocalToZ)
-    var tzMinutes = tzPositiveMinutes % 60
-    var tzHours = String(tzPositiveMinutes / 60)
+    let tzOffsetString = tzMinutesAddToLocalToZ > 0 ? '-' : '+'
+    const tzPositiveMinutes = Math.abs(tzMinutesAddToLocalToZ)
+    const tzMinutes = tzPositiveMinutes % 60
+    const tzHours = String(tzPositiveMinutes / 60)
     tzOffsetString += tzHours.length < 2 ? '0' + tzHours : tzHours
     if (tzMinutes) {
-      tzMinutes = String(tzMinutes)
-      tzOffsetString += ':' + (tzMinutes.length < 2 ? '0' + tzMinutes : tzMinutes)
+      const tzMinutesString = String(tzMinutes)
+      tzOffsetString += ':' + (tzMinutesString.length < 2 ? '0' + tzMinutesString : tzMinutesString)
     }
 
-    return result + tzOffsetString
+    return localTime + tzOffsetString
   }
 }

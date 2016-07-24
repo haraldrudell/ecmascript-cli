@@ -17,16 +17,14 @@ import util from 'util'
 const fs = bluebird.promisifyAll(fs0)
 
 class ClassName {
-  constructor(o) {
+  constructor(o) { // don't declare functions in constructor. Don't you do it.
     if (!o) o = false
-    this.appName = o.appName
-    this.yamlfile = o.settings || './default.yaml'
-    this.run().catch(e => process.nextTick(e => {throw e}, e)) // nextTick escapes promise
+    this.appName = String(o.appName || 'nameless')
+    this.yamlfile = String(o.settings || './default.yaml')
+    process.nextTick(this.init, this) // invoke member init with a clean stack
   }
 
   async run() {
-    this.loadOptions()
-    await this.loadYaml()
     console.log(`app: ${this.appName}
 file: ${path.relative(process.cwd(), __filename)}
 class: ${this.constructor.name}
@@ -37,14 +35,29 @@ options: ${util.format(this.options)}
     console.log('Completed successfully')
   }
 
-  loadOptions() {
-    const options = parseOptions(process.argv)
-    this.options = options
+  init(instance) {
+    if (this) {
+      Promise.all([ // do all in parallel
+        new Promise(r => r(parseOptions(process.argv))), // promisify
+        fs.readFileAsync(this.yamlfile, 'utf8')
+          .then(utf8 => yaml.safeLoad(utf8)),
+      ]).then(resolutions => {
+        this.options = resolutions[0]
+        this.settings = resolutions[1]
+        this.run()
+      }).catch(this.errorHandler)
+    } else { // recover this after stack-less constructor invocation
+      instance.errorHandler = instance.errorHandler.bind(instance)
+      instance.init() // one extra stack frame to retrieve this
+    }
   }
 
-  loadYaml() {
-    return fs.readFileAsync(this.yamlfile, 'utf8')
-      .then(utf8 => this.settings = yaml.safeLoad(utf8))
+  errorHandler(e) { // if anything fails anywhere anytime, that mess gets right here
+    if (!(e instanceof Error)) e = new Error('value: ' + util.format(e))
+    console.error(new Error('errorHandler received error: ' + e.message).stack)
+
+    // for now throw
+    process.nextTick(e => {throw e}, e) // nextTick escapes promise
   }
 }
 
