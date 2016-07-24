@@ -1,0 +1,34 @@
+{
+  "name": "ecmascript-cli",
+  "version": "0.0.0",
+  "description": "ECMAScript command-line application",
+  "scripts": {
+    "watch": "gulp watch",
+    "build": "gulp transpile",
+    "clean": "rm -r build",
+    "start": "[ ! -f build/0-entrypoint.js ] && gulp transpile; node build/0-entrypoint.js"
+  },
+  "author": "Harald Rudell <c@haraldrudell.com> (http://haraldrudell.com)",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-polyfill": "^6.9.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-es2016": "^6.11.3",
+    "babel-preset-stage-0": "^6.5.0",
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-babel": "^6.1.2",
+    "gulp-print": "^2.0.1",
+    "gulp-sourcemaps": "^1.6.0"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "es2016",
+      "stage-0"
+    ]
+  },
+  "dependencies": {
+    "bluebird": "^3.4.1",
+    "js-yaml": "^3.6.1"
+  }
+}
